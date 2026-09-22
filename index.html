@@ -1,0 +1,938 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generador de Textos para Ofertas y Planes</title>
+<style>
+  :root{
+    --bg:#f4f6f8;
+    --panel:#ffffff;
+    --border:#e2e6ea;
+    --text:#1c2733;
+    --text-muted:#5b6b7a;
+    --primary:#0d5c63;
+    --primary-dark:#08454a;
+    --accent:#c99a3c;
+    --ok:#1e8e5a;
+    --ok-bg:#e6f6ee;
+    --warn:#b3730a;
+    --warn-bg:#fdf1de;
+    --over:#c0392b;
+    --over-bg:#fbe7e5;
+    --radius:10px;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    line-height:1.45;
+  }
+  header.app-header{
+    background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+    color:#fff;
+    padding:22px 28px;
+  }
+  header.app-header h1{
+    margin:0 0 4px 0;
+    font-size:1.4rem;
+    font-weight:700;
+  }
+  header.app-header p{
+    margin:0;
+    color:#d7e8e8;
+    font-size:0.92rem;
+  }
+  header.app-header p.note{
+    margin-top:4px;
+    color:#b9d8d6;
+    font-size:0.78rem;
+  }
+  main{
+    display:grid;
+    grid-template-columns:380px 1fr;
+    gap:22px;
+    padding:24px;
+    align-items:start;
+    max-width:1400px;
+    margin:0 auto;
+  }
+  @media (max-width:940px){
+    main{grid-template-columns:1fr;}
+  }
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:20px;
+  }
+  .form-panel{
+    position:sticky;
+    top:24px;
+  }
+  @media (max-width:940px){
+    .form-panel{position:static;}
+  }
+  .form-panel h2, .results-panel h2{
+    margin-top:0;
+    font-size:1.05rem;
+    color:var(--primary-dark);
+  }
+  fieldset{
+    border:none;
+    padding:0;
+    margin:0 0 16px 0;
+  }
+  label{
+    display:block;
+    font-size:0.83rem;
+    font-weight:600;
+    color:var(--text-muted);
+    margin-bottom:5px;
+  }
+  .field{margin-bottom:14px;}
+  input[type=text], input[type=number], select, textarea{
+    width:100%;
+    padding:8px 10px;
+    border:1px solid var(--border);
+    border-radius:7px;
+    font-size:0.92rem;
+    color:var(--text);
+    background:#fbfcfd;
+    font-family:inherit;
+  }
+  textarea{resize:vertical; min-height:60px;}
+  input:focus, select:focus, textarea:focus{
+    outline:2px solid var(--primary);
+    outline-offset:1px;
+  }
+  .row2{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+  .hint{
+    font-size:0.76rem;
+    color:var(--text-muted);
+    margin-top:3px;
+  }
+  details.limits{
+    margin:16px 0;
+    border:1px dashed var(--border);
+    border-radius:8px;
+    padding:10px 12px;
+  }
+  details.limits summary{
+    cursor:pointer;
+    font-size:0.85rem;
+    font-weight:600;
+    color:var(--primary-dark);
+  }
+  details.limits .row2{margin-top:10px;}
+  button.primary{
+    width:100%;
+    background:var(--primary);
+    color:#fff;
+    border:none;
+    border-radius:8px;
+    padding:11px 14px;
+    font-size:0.96rem;
+    font-weight:700;
+    cursor:pointer;
+    transition:background .15s ease;
+  }
+  button.primary:hover{background:var(--primary-dark);}
+  .results-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(320px,1fr));
+    gap:16px;
+  }
+  .empty-state{
+    color:var(--text-muted);
+    font-size:0.92rem;
+    padding:30px 10px;
+    text-align:center;
+    border:1px dashed var(--border);
+    border-radius:var(--radius);
+  }
+  .card{
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:16px;
+    background:#fdfefe;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .card .chip{
+    display:inline-block;
+    align-self:flex-start;
+    background:var(--accent);
+    color:#3a2c05;
+    font-size:0.7rem;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+    padding:3px 8px;
+    border-radius:20px;
+  }
+  .field-block{
+    border-top:1px solid var(--border);
+    padding-top:8px;
+  }
+  .field-block:first-of-type{border-top:none; padding-top:0;}
+  .field-block-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:4px;
+  }
+  .field-label{
+    font-size:0.72rem;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+    color:var(--text-muted);
+  }
+  .count-pill{
+    font-size:0.7rem;
+    font-weight:700;
+    padding:2px 7px;
+    border-radius:20px;
+  }
+  .count-ok{background:var(--ok-bg); color:var(--ok);}
+  .count-warn{background:var(--warn-bg); color:var(--warn);}
+  .count-over{background:var(--over-bg); color:var(--over);}
+  .titulo-text{
+    font-size:1.05rem;
+    font-weight:700;
+    color:var(--text);
+  }
+  .desc-text{
+    font-size:0.9rem;
+    white-space:pre-wrap;
+  }
+  ul.cond-list{
+    margin:0;
+    padding-left:18px;
+    font-size:0.87rem;
+  }
+  ul.cond-list li{margin-bottom:2px;}
+  .card-actions{
+    display:flex;
+    gap:8px;
+    margin-top:4px;
+  }
+  button.copy-btn{
+    flex:1;
+    background:#eef3f2;
+    border:1px solid var(--border);
+    color:var(--primary-dark);
+    font-size:0.78rem;
+    font-weight:600;
+    padding:7px 8px;
+    border-radius:7px;
+    cursor:pointer;
+  }
+  button.copy-btn:hover{background:#e2ece9;}
+  button.copy-btn.copied{background:var(--ok-bg); color:var(--ok); border-color:var(--ok);}
+  footer{
+    text-align:center;
+    color:var(--text-muted);
+    font-size:0.78rem;
+    padding:18px;
+  }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <h1>Generador de Textos para Ofertas y Planes</h1>
+  <p>Completa los datos de tu oferta y obtén varias ideas de título, descripción y condiciones listas para usar.</p>
+  <p class="note">Frases inspiradas en ofertas reales de la red de hoteles GHL.</p>
+</header>
+
+<main>
+  <section class="panel form-panel">
+    <h2>Datos de la oferta</h2>
+    <form id="offer-form">
+      <div class="field">
+        <label for="destino">Destino / Hotel</label>
+        <input type="text" id="destino" value="Santa Marta">
+      </div>
+
+      <div class="field">
+        <label for="perfil">Perfil del hotel</label>
+        <select id="perfil">
+          <option value="leisure">Leisure</option>
+          <option value="mixto">Mixto</option>
+          <option value="urbano">Urbano</option>
+        </select>
+        <div class="hint">Ajusta el tono del texto: más emocional y experiencial (Leisure), neutral y adaptable (Mixto), o enfocado en ciudad (Urbano).</div>
+      </div>
+
+      <div class="field">
+        <label for="tipo">Tipo de oferta</label>
+        <select id="tipo">
+          <option value="anticipada">Compra Anticipada</option>
+          <option value="ultimo_minuto">Último Minuto</option>
+          <option value="minima_estadia">Mínima Estadía</option>
+          <option value="descuento_directo">Descuento Directo</option>
+          <option value="fin_de_semana">Fin de Semana</option>
+          <option value="promo_especial">Promo Especial</option>
+          <option value="romance">Romance</option>
+          <option value="oferta_general">Oferta General</option>
+          <option value="personalizado">Personalizado</option>
+        </select>
+      </div>
+
+      <div class="field" id="field-descuento">
+        <label for="descuento">Descuento (%)</label>
+        <input type="number" id="descuento" min="1" max="90" value="15">
+      </div>
+
+      <div class="field" id="field-dias">
+        <label for="dias" id="label-dias">Días de anticipación</label>
+        <input type="number" id="dias" min="1" max="365" value="30">
+      </div>
+
+      <div class="field" id="field-noches-min">
+        <label for="nochesMin">Noches mínimas</label>
+        <input type="number" id="nochesMin" min="1" max="30" value="3">
+      </div>
+
+      <div class="field" id="field-tema">
+        <label for="tema" id="label-tema">Tema / motivo</label>
+        <input type="text" id="tema" placeholder="Ej: Halloween, Aniversario, Oferta de Verano">
+      </div>
+
+      <div class="field row2" id="field-noche-gratis">
+        <div>
+          <label for="nochesPagas">Noche gratis: paga</label>
+          <input type="number" id="nochesPagas" min="1" max="30" value="2">
+        </div>
+        <div>
+          <label for="nochesTotal">Noche gratis: total</label>
+          <input type="number" id="nochesTotal" min="1" max="30" value="3">
+        </div>
+      </div>
+
+      <div class="field" id="field-beneficio">
+        <label for="beneficio">Beneficio de la oferta</label>
+        <input type="text" id="beneficio" placeholder="Ej: upgrade de habitación gratis">
+      </div>
+
+      <div class="field">
+        <label for="condicionesExtra">Condiciones adicionales (opcional, una por línea)</label>
+        <textarea id="condicionesExtra" placeholder="Ej: Aplica solo para reservas directas."></textarea>
+      </div>
+
+      <div class="field">
+        <label for="numVariantes">Cantidad de ideas a generar</label>
+        <input type="number" id="numVariantes" min="2" max="8" value="4">
+      </div>
+
+      <details class="limits">
+        <summary>Límites de caracteres</summary>
+        <div class="row2">
+          <div>
+            <label for="maxTitulo">Título (máx.)</label>
+            <input type="number" id="maxTitulo" min="10" max="120" value="40">
+          </div>
+          <div>
+            <label for="maxDescripcion">Descripción (máx.)</label>
+            <input type="number" id="maxDescripcion" min="50" max="1000" value="320">
+          </div>
+        </div>
+        <div class="hint">Se usan como referencia visual (verde/amarillo/rojo) según los ejemplos base.</div>
+      </details>
+
+      <button type="submit" class="primary">Generar ideas</button>
+    </form>
+  </section>
+
+  <section class="panel results-panel">
+    <h2>Ideas generadas</h2>
+    <div id="results">
+      <div class="empty-state">Completa los datos a la izquierda y presiona "Generar ideas" para ver tus primeras propuestas.</div>
+    </div>
+  </section>
+</main>
+
+<footer>Herramienta interna GHL &mdash; Generador de textos para ofertas y planes.</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  var TIPO_LABELS = {
+    anticipada: "Compra Anticipada",
+    ultimo_minuto: "Último Minuto",
+    minima_estadia: "Mínima Estadía",
+    descuento_directo: "Descuento Directo",
+    fin_de_semana: "Fin de Semana",
+    promo_especial: "Promo Especial",
+    romance: "Romance",
+    oferta_general: "Oferta General",
+    personalizado: "Personalizado"
+  };
+
+  var PERFIL_LABELS = {
+    leisure: "Leisure",
+    mixto: "Mixto",
+    urbano: "Urbano"
+  };
+
+  function escapeHtml(str){
+    return String(str)
+      .replace(/&/g,"&amp;")
+      .replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;")
+      .replace(/'/g,"&#39;");
+  }
+
+  function shuffle(arr){
+    var a = arr.slice();
+    for(var i=a.length-1;i>0;i--){
+      var j = Math.floor(Math.random()*(i+1));
+      var tmp=a[i]; a[i]=a[j]; a[j]=tmp;
+    }
+    return a;
+  }
+
+  function buildTemplates(tipo, p){
+    var destino = p.destino || "tu destino";
+    var descuento = p.descuento;
+    var dias = p.dias;
+    var nochesMin = p.nochesMin;
+    var nochesPagas = p.nochesPagas;
+    var nochesTotal = p.nochesTotal;
+    var tema = p.tema || "esta temporada";
+    var beneficio = p.beneficio || "un beneficio exclusivo";
+
+    var pools = {
+
+      anticipada: {
+        titulos: [
+          "Compra anticipada " + dias + " días",
+          "Anticípate " + dias + " días y obtén " + descuento + "% OFF",
+          "Reserva con anticipación y ahorra " + descuento + "%",
+          "Tu recompensa por planear",
+          "✨ Reserva anticipada " + dias + " días",
+          "Planifica y ahorra en " + destino
+        ],
+        pares: {
+          leisure: [
+            {hook:"Planifica tus próximas vacaciones en " + destino + " y ahorra un " + descuento + "%.",
+             parrafo:"Reserva con " + dias + " días de anticipación y asegura tiempo de descanso, playa y buena mesa en familia, en pareja o con amigos."},
+            {hook:"Entre más rápido sueñes con tu escapada, más ahorras.",
+             parrafo:"Anticípate " + dias + " días y obtén " + descuento + "% de descuento para disfrutar con calma cada momento de tu descanso en " + destino + "."},
+            {hook:"El mejor descanso empieza por planearlo con tiempo.",
+             parrafo:"Reserva con " + dias + " días de anticipación y vive unas vacaciones inolvidables en " + destino + " con " + descuento + "% de descuento."}
+          ],
+          mixto: [
+            {hook:"Planear con tiempo tiene sus ventajas, sea cual sea el motivo de tu viaje.",
+             parrafo:"Reserva con " + dias + " días de anticipación y obtén " + descuento + "% de descuento, ya sea para tu próximo viaje de trabajo o tu escapada de descanso a " + destino + "."},
+            {hook:"Anticípate y ahorra, para negocios o para placer.",
+             parrafo:"Con " + dias + " días de anticipación accedes a un " + descuento + "% de descuento en tu estadía en " + destino + ", sin importar si viajas por trabajo o por vacaciones."},
+            {hook:"Tu próximo viaje, mejor planeado.",
+             parrafo:"Reserva con " + dias + " días de anticipación y asegura " + descuento + "% de descuento en " + destino + ", perfecto tanto para tu agenda de negocios como para tu descanso."}
+          ],
+          urbano: [
+            {hook:"Anticípate y conecta con lo mejor de " + destino + ".",
+             parrafo:"Reserva con " + dias + " días de anticipación y obtén " + descuento + "% de descuento en una ubicación estratégica, cerca de los principales puntos de interés, gastronomía y vida de la ciudad."},
+            {hook:"Planea tu próxima visita a " + destino + " con tiempo.",
+             parrafo:"Con " + dias + " días de anticipación, obtén " + descuento + "% de descuento y asegura la mejor base para tus reuniones, planes de negocio o exploración de la ciudad."},
+            {hook:"Quien reserva antes, se mueve mejor por la ciudad.",
+             parrafo:"Anticípate " + dias + " días y ahorra " + descuento + "% en " + destino + ", a pasos de la mejor oferta gastronómica, cultural y comercial."}
+          ]
+        },
+        condiciones: [
+          "Reserva con " + dias + " días de anticipación.",
+          "Disponibilidad sujeta a cupos y fechas.",
+          "No acumulable con otras promociones."
+        ]
+      },
+
+      ultimo_minuto: {
+        titulos: [
+          "Último minuto — " + dias + " días",
+          "⚡ Escapada de último minuto",
+          "¡Lánzate a " + destino + "!",
+          "Escápate a " + destino + " de último minuto",
+          "Viaje de última hora"
+        ],
+        pares: {
+          leisure: [
+            {hook:"¿Se te antojó escaparte?",
+             parrafo:"Aprovecha un " + descuento + "% de descuento y vive una escapada espontánea en " + destino + ", con tiempo para descansar en familia, pareja o amigos."},
+            {hook:"El plan perfecto no espera.",
+             parrafo:"Viaja hoy o en los próximos " + dias + " días y disfruta " + descuento + "% de descuento para vivir unas vacaciones inolvidables en " + destino + "."},
+            {hook:"Una escapada de último momento nunca se sintió tan bien.",
+             parrafo:"Reserva dentro de los próximos " + dias + " días y accede a " + descuento + "% de descuento para desconectarte y disfrutar " + destino + " sin planearlo con tanta anticipación."}
+          ],
+          mixto: [
+            {hook:"¿Viaje de última hora, por trabajo o por placer?",
+             parrafo:"Reserva hoy o en los próximos " + dias + " días y obtén " + descuento + "% de descuento en " + destino + ", sin importar el motivo de tu viaje."},
+            {hook:"Decisiones de último momento, sin complicaciones.",
+             parrafo:"Aprovecha nuestras tarifas especiales para reservas inmediatas y asegura tu estadía en " + destino + " hoy mismo, ya sea para una reunión, un evento o una escapada."},
+            {hook:"Cambios de planes también merecen buen precio.",
+             parrafo:"Reserva con " + dias + " días o menos de anticipación y obtén " + descuento + "% de descuento en tu próxima estadía en " + destino + "."}
+          ],
+          urbano: [
+            {hook:"¿Plan de último momento en " + destino + "?",
+             parrafo:"Reserva hoy y vive la ciudad como se debe: sin itinerarios rígidos, con todo el confort del hotel y un " + descuento + "% de descuento para moverte entre reuniones, restaurantes o planes de última hora."},
+            {hook:"La ciudad no espera, y tú tampoco tienes que hacerlo.",
+             parrafo:"Reserva dentro de los próximos " + dias + " días y obtén " + descuento + "% de descuento en una ubicación ideal para explorar " + destino + " o resolver tu agenda de negocios."},
+            {hook:"Escápate a " + destino + " sin planearlo con tanto tiempo.",
+             parrafo:"Aprovecha " + descuento + "% de descuento reservando en los próximos " + dias + " días y disfruta de la mejor conexión con la ciudad."}
+          ]
+        },
+        condiciones: [
+          "Aplica para reservas realizadas hasta " + dias + " días antes de la llegada.",
+          "Disponibilidad sujeta a cupos y fechas.",
+          "No acumulable con otras promociones."
+        ]
+      },
+
+      minima_estadia: {
+        titulos: [
+          "Estadía mínima de " + nochesMin + " noches",
+          "Quédate más, paga menos",
+          "Más noches, más beneficios",
+          "Plan de " + nochesMin + " noches, más beneficios"
+        ],
+        pares: {
+          leisure: [
+            {hook:"Quédate más, disfruta más.",
+             parrafo:"Reserva " + nochesMin + " noches o más en " + destino + " y obtén " + descuento + "% de descuento para prolongar tu descanso, tus experiencias y esos momentos en familia, pareja o amigos."},
+            {hook:"Más noches, más tiempo para lo que importa.",
+             parrafo:"Hospédate mínimo " + nochesMin + " noches y disfruta un " + descuento + "% de descuento, con más tiempo para descansar, comer bien y disfrutar " + destino + " sin apuros."},
+            {hook:"Regálate más tiempo de descanso.",
+             parrafo:"Reserva " + nochesMin + " noches o más y vive " + destino + " con calma, con un " + descuento + "% de descuento en tu estadía."}
+          ],
+          mixto: [
+            {hook:"La opción perfecta para quienes desean aprovechar cada momento.",
+             parrafo:"Reserva una estadía mínima de " + nochesMin + " noches en " + destino + " y obtén " + descuento + "% de descuento, ya sea por descanso o por trabajo."},
+            {hook:"Más noches, más rendimiento, sin importar el motivo del viaje.",
+             parrafo:"Hospédate " + nochesMin + " noches o más y accede a " + descuento + "% de descuento, ideal tanto para estadías de negocios prolongadas como para tu tiempo de descanso en " + destino + "."},
+            {hook:"Entre más tiempo te quedes, más conviene.",
+             parrafo:"Reserva " + nochesMin + " noches o más en " + destino + " y obtén " + descuento + "% de descuento en toda tu estadía, sea cual sea el propósito de tu viaje."}
+          ],
+          urbano: [
+            {hook:"Quédate más tiempo y saca más provecho a " + destino + ".",
+             parrafo:"Reserva " + nochesMin + " noches o más y obtén " + descuento + "% de descuento, con más tiempo para tus reuniones, tu agenda o para explorar la gastronomía y la cultura de la ciudad."},
+            {hook:"Más noches en el corazón de " + destino + ".",
+             parrafo:"Hospédate mínimo " + nochesMin + " noches y disfruta " + descuento + "% de descuento en una ubicación estratégica, cerca de los principales puntos de interés de la ciudad."},
+            {hook:"Tu base ideal para varios días en " + destino + ".",
+             parrafo:"Reserva " + nochesMin + " noches o más y obtén " + descuento + "% de descuento, perfecto para estadías de trabajo o para recorrer la ciudad con calma."}
+          ]
+        },
+        condiciones: [
+          "Estadía mínima: " + nochesMin + " noches.",
+          "Disponibilidad sujeta a cupos y fechas.",
+          "No acumulable con otras promociones."
+        ]
+      },
+
+      descuento_directo: {
+        titulos: [
+          "Oferta escapada " + descuento + "% OFF",
+          "Ahorra " + descuento + "% en tu estadía",
+          "Oferta especial " + descuento + "% OFF",
+          "Tarifa con descuento",
+          "Escapada " + destino + " -" + descuento + "%"
+        ],
+        pares: {
+          leisure: [
+            {hook:"Haz de tu próxima escapada el plan perfecto.",
+             parrafo:"Disfruta de un " + descuento + "% de descuento y vive la esencia de " + destino + ": descanso, buena mesa y momentos para compartir."},
+            {hook:"Menos costo, la misma gran experiencia.",
+             parrafo:"Aprovecha un " + descuento + "% de descuento directo en tu próxima estadía y disfruta " + destino + " sin preocuparte por nada más."},
+            {hook:"Tu próximo descanso cuesta menos.",
+             parrafo:"Con un " + descuento + "% de descuento, vivir " + destino + " en familia, pareja o con amigos está más cerca de lo que crees."}
+          ],
+          mixto: [
+            {hook:"Ahorra, sin importar el motivo de tu viaje.",
+             parrafo:"Reserva tu próxima estadía en " + destino + " y accede a un " + descuento + "% de descuento, ya sea por trabajo, un evento o una escapada."},
+            {hook:"Precio especial, para cualquier tipo de viaje.",
+             parrafo:"Obtén un " + descuento + "% de descuento directo en tu estadía en " + destino + ", ideal tanto para tu agenda de negocios como para tu tiempo de descanso."},
+            {hook:"El equilibrio perfecto entre precio y comodidad.",
+             parrafo:"Aprovecha un " + descuento + "% de descuento en " + destino + " para tu próximo viaje, sea de trabajo o de placer."}
+          ],
+          urbano: [
+            {hook:"Ahorra y conecta con lo mejor de " + destino + ".",
+             parrafo:"Disfruta un " + descuento + "% de descuento directo en tu estadía, en una ubicación ideal para moverte entre gastronomía, cultura, compras y negocios."},
+            {hook:"Tu próxima visita a la ciudad, a mejor precio.",
+             parrafo:"Obtén un " + descuento + "% de descuento en " + destino + " y aprovecha la cercanía a los principales puntos de interés, comercio y entretenimiento."},
+            {hook:"Menos costo, más ciudad.",
+             parrafo:"Aprovecha un " + descuento + "% de descuento directo y vive " + destino + " desde una ubicación estratégica para reuniones, eventos o exploración urbana."}
+          ]
+        },
+        condiciones: [
+          "Disponibilidad sujeta a cupos y fechas.",
+          "No acumulable con otras promociones.",
+          "Válido para reservas directas."
+        ]
+      },
+
+      fin_de_semana: {
+        titulos: [
+          "Fin de semana perfecto",
+          "Tarifa de fin de semana",
+          "Escápate a " + destino + " los fines de semana",
+          "Plan de fin de semana en " + destino
+        ],
+        pares: {
+          leisure: [
+            {hook:"El descanso que mereces, al precio que te mereces.",
+             parrafo:"Escápate este fin de semana a " + destino + " y disfruta todo el confort, la gastronomía y las experiencias del destino con un " + descuento + "% de descuento."},
+            {hook:"Haz una pausa, desconéctate de la rutina.",
+             parrafo:"Regálate un fin de semana perfecto en " + destino + ", con tiempo para descansar en familia, pareja o con amigos, y un " + descuento + "% de descuento."},
+            {hook:"El fin de semana perfecto empieza con la reserva correcta.",
+             parrafo:"Disfruta un " + descuento + "% de descuento en tu estadía en " + destino + " este fin de semana, ideal para recargar energía."}
+          ],
+          mixto: [
+            {hook:"Un fin de semana para descansar, o para adelantar lo pendiente.",
+             parrafo:"Disfruta un " + descuento + "% de descuento en tu estadía en " + destino + " este fin de semana, ya sea para desconectarte o para aprovechar el tiempo en tus propios proyectos."},
+            {hook:"El fin de semana también es buen momento para negocios.",
+             parrafo:"Aprovecha un " + descuento + "% de descuento en " + destino + " este fin de semana, perfecto para una reunión, un evento o simplemente para descansar."},
+            {hook:"Tu fin de semana, a tu manera.",
+             parrafo:"Reserva en " + destino + " con " + descuento + "% de descuento este fin de semana, sea para trabajar con calma o para desconectarte del todo."}
+          ],
+          urbano: [
+            {hook:"El fin de semana perfecto para recorrer " + destino + ".",
+             parrafo:"Disfruta un " + descuento + "% de descuento en tu estadía y aprovecha la cercanía a la mejor gastronomía, cultura y entretenimiento de la ciudad."},
+            {hook:"Fin de semana en la ciudad, sin salir del confort.",
+             parrafo:"Reserva en " + destino + " con " + descuento + "% de descuento y vive un fin de semana entre compras, planes culturales y buena mesa."},
+            {hook:"Escápate a " + destino + " este fin de semana.",
+             parrafo:"Aprovecha un " + descuento + "% de descuento y disfruta de una ubicación ideal para moverte por la ciudad de viernes a domingo."}
+          ]
+        },
+        condiciones: [
+          "Válido para estadías de viernes a domingo.",
+          "Disponibilidad sujeta a cupos y fechas.",
+          "No acumulable con otras promociones."
+        ]
+      },
+
+      promo_especial: {
+        titulos: [
+          tema + " en " + destino,
+          "Experiencia " + tema,
+          "Escapada especial: " + tema,
+          "Promoción " + tema
+        ],
+        pares: {
+          leisure: [
+            {hook:"Este " + tema + " cambia la rutina por una escapada inolvidable.",
+             parrafo:"Reserva directamente y obtén un " + descuento + "% de descuento para vivir " + destino + " con descanso, buena mesa y experiencias en familia, pareja o amigos."},
+            {hook:"Regálate una escapada pensada para vivir el destino sin apuros.",
+             parrafo:"Disfruta un " + descuento + "% de descuento y beneficios exclusivos durante tu estadía en " + destino + " por " + tema + "."},
+            {hook:"Paga " + nochesPagas + " noches y quédate " + nochesTotal + ".",
+             parrafo:"Regálate más tiempo para descansar en " + destino + ". Hospédate " + nochesTotal + " noches, paga solo " + nochesPagas + " y disfruta de esta promoción especial por " + tema + "."}
+          ],
+          mixto: [
+            {hook:"Una razón más para reservar, sea cual sea tu plan.",
+             parrafo:"Por " + tema + ", obtén un " + descuento + "% de descuento en tu estadía en " + destino + ", ideal tanto para una escapada como para tu agenda de trabajo."},
+            {hook:"Aprovecha " + tema + ", vengas por lo que vengas.",
+             parrafo:"Reserva en " + destino + " y obtén " + descuento + "% de descuento durante " + tema + ", sin importar si tu viaje es de descanso o de negocios."},
+            {hook:"Una promoción especial para cualquier motivo de viaje.",
+             parrafo:"Disfruta un " + descuento + "% de descuento en " + destino + " por " + tema + ", pensado tanto para tu descanso como para tu trabajo."}
+          ],
+          urbano: [
+            {hook:tema + " en el corazón de " + destino + ".",
+             parrafo:"Reserva directamente y obtén un " + descuento + "% de descuento para vivir " + tema + " desde una ubicación estratégica, cerca de lo mejor de la ciudad."},
+            {hook:"Vive " + tema + " conectado con toda la ciudad.",
+             parrafo:"Disfruta un " + descuento + "% de descuento en " + destino + " durante " + tema + ", con fácil acceso a gastronomía, cultura y entretenimiento urbano."},
+            {hook:tema + " tiene mejor sabor en " + destino + ".",
+             parrafo:"Aprovecha un " + descuento + "% de descuento y vive " + tema + " a pasos de los principales puntos de interés de la ciudad."}
+          ]
+        },
+        condiciones: [
+          "Disponibilidad sujeta a cupos y fechas.",
+          "No acumulable con otras promociones.",
+          "Aplican términos y condiciones."
+        ]
+      },
+
+      romance: {
+        titulos: [
+          tema + " inolvidable en " + destino,
+          "Escápense juntos a " + destino,
+          "Amor en " + destino,
+          "Una escapada para recordar"
+        ],
+        pares: {
+          leisure: [
+            {hook:"Planeen ese momento especial con calma.",
+             parrafo:"Disfruten " + descuento + "% de descuento reservando su escapada en pareja a " + destino + ", con tiempo para el descanso, la buena mesa y momentos inolvidables."},
+            {hook:"Te invitamos a vivir un " + tema + " inolvidable.",
+             parrafo:"Reserva y aprovecha un " + descuento + "% de descuento para compartir en pareja el paisaje, la gastronomía y la magia de " + destino + "."},
+            {hook:"Hay momentos que merecen celebrarse en grande.",
+             parrafo:"Vive " + tema + " en " + destino + " con un " + descuento + "% de descuento exclusivo y todo el confort para disfrutar en pareja."}
+          ],
+          mixto: [
+            {hook:"Una escapada en pareja, aunque el viaje empezó por trabajo.",
+             parrafo:"Extiende tu estadía en " + destino + " y aprovecha " + descuento + "% de descuento para celebrar " + tema + " en pareja al final de tu agenda."},
+            {hook:"El romance también encuentra su lugar entre semana.",
+             parrafo:"Reserva en " + destino + " y obtén " + descuento + "% de descuento para celebrar " + tema + ", sin importar si combinas tu viaje con trabajo o descanso."},
+            {hook:"Un buen motivo para quedarse una noche más.",
+             parrafo:"Aprovecha " + descuento + "% de descuento en " + destino + " para celebrar " + tema + " en pareja, antes o después de tu agenda."}
+          ],
+          urbano: [
+            {hook:"Una cita en el corazón de " + destino + ".",
+             parrafo:"Celebren " + tema + " con un " + descuento + "% de descuento, rodeados de la mejor gastronomía, cultura y vida nocturna de la ciudad."},
+            {hook:"Romance con vista a la ciudad.",
+             parrafo:"Reserva en " + destino + " y disfruten " + descuento + "% de descuento para celebrar " + tema + " en pareja, a pasos de los mejores planes urbanos."},
+            {hook:tema + ", con toda la ciudad de fondo.",
+             parrafo:"Aprovechen un " + descuento + "% de descuento en " + destino + " y celebren su " + tema + " entre restaurantes, cultura y los rincones más especiales de la ciudad."}
+          ]
+        },
+        condiciones: [
+          "Disponibilidad sujeta a cupos y fechas.",
+          "No acumulable con otras promociones."
+        ]
+      },
+
+      oferta_general: {
+        titulos: [
+          tema + " " + descuento + "% de descuento",
+          destino + " -" + descuento + "%",
+          "Descubre " + destino + " con descuento especial",
+          tema
+        ],
+        pares: {
+          leisure: [
+            {hook:"Descubre " + destino + " con un plan perfecto para desconectarte.",
+             parrafo:"Disfruta un " + descuento + "% de descuento en tu estadía y vive descanso, gastronomía y experiencias en familia, pareja o amigos."},
+            {hook:tema + ": tu momento de descanso te espera.",
+             parrafo:"Reserva ahora y recibe un " + descuento + "% de descuento en tu próxima estadía en " + destino + ", pensado para disfrutar sin prisa."},
+            {hook:"Reserva directo y ahorra en tu próximo descanso.",
+             parrafo:"Aprovecha un " + descuento + "% de descuento en tu próxima estadía en " + destino + " por " + tema + "."}
+          ],
+          mixto: [
+            {hook:tema + ", para cualquier motivo de viaje.",
+             parrafo:"Reserva ahora y recibe un " + descuento + "% de descuento en " + destino + ", ya sea por trabajo o por placer. Sujeto a disponibilidad."},
+            {hook:"Una oferta que se adapta a tu viaje.",
+             parrafo:"Aprovecha un " + descuento + "% de descuento en tu próxima estadía en " + destino + " por " + tema + ", sin importar si viajas por negocios o por descanso."},
+            {hook:"Reserva directo y ahorra, vengas por lo que vengas.",
+             parrafo:"Disfruta " + descuento + "% de descuento en " + destino + " durante " + tema + ". Aplican términos y condiciones."}
+          ],
+          urbano: [
+            {hook:"Descubre " + destino + " conectado con toda la ciudad.",
+             parrafo:"Disfruta un " + descuento + "% de descuento en tu estadía por " + tema + ", con fácil acceso a gastronomía, cultura, compras y negocios."},
+            {hook:tema + " en el corazón de " + destino + ".",
+             parrafo:"Reserva ahora y recibe un " + descuento + "% de descuento en una ubicación estratégica de la ciudad."},
+            {hook:"Reserva directo y aprovecha la mejor ubicación en " + destino + ".",
+             parrafo:"Disfruta " + descuento + "% de descuento por " + tema + ", ideal para moverte entre reuniones, planes culturales y gastronómicos."}
+          ]
+        },
+        condiciones: [
+          "Disponibilidad sujeta a cupos y fechas.",
+          "No acumulable con otras promociones.",
+          "Aplican términos y condiciones."
+        ]
+      },
+
+      personalizado: {
+        titulos: [
+          beneficio.charAt(0).toUpperCase() + beneficio.slice(1),
+          "Disfruta de " + beneficio + " en " + destino,
+          "Oferta especial: " + beneficio,
+          destino + " te espera con " + beneficio
+        ],
+        pares: [
+          {hook:"Vive " + destino + " con un beneficio especial.",
+           parrafo:"Reserva ahora y disfruta de " + beneficio + " en tu próxima estadía en " + destino + "."},
+          {hook:"Tu próxima estadía, mejor que nunca.",
+           parrafo:"Aprovecha " + beneficio + " exclusivo para tu visita a " + destino + "."},
+          {hook:"Una razón más para elegir " + destino + ".",
+           parrafo:"Con esta oferta obtienes " + beneficio + " al reservar tu estadía en " + destino + "."},
+          {hook:"No dejes pasar esta oportunidad.",
+           parrafo:"Reserva hoy y accede a " + beneficio + " en " + destino + "."}
+        ],
+        condiciones: [
+          "Disponibilidad sujeta a cupos y fechas.",
+          "No acumulable con otras promociones."
+        ]
+      }
+    };
+
+    return pools[tipo] || pools.anticipada;
+  }
+
+  function countClass(len, max){
+    if(len > max) return "count-over";
+    if(len > max*0.8) return "count-warn";
+    return "count-ok";
+  }
+
+  function buildVariants(){
+    var destino = document.getElementById("destino").value.trim() || "tu destino";
+    var perfil = document.getElementById("perfil").value;
+    var tipo = document.getElementById("tipo").value;
+    var descuento = parseInt(document.getElementById("descuento").value, 10) || 0;
+    var dias = parseInt(document.getElementById("dias").value, 10) || 0;
+    var nochesMin = parseInt(document.getElementById("nochesMin").value, 10) || 0;
+    var nochesPagas = parseInt(document.getElementById("nochesPagas").value, 10) || 0;
+    var nochesTotal = parseInt(document.getElementById("nochesTotal").value, 10) || 0;
+    var tema = document.getElementById("tema").value.trim() || "esta temporada";
+    var beneficio = document.getElementById("beneficio").value.trim() || "un beneficio exclusivo";
+    var condicionesExtra = document.getElementById("condicionesExtra").value
+      .split("\n").map(function(s){return s.trim();}).filter(Boolean);
+    var numVariantes = Math.max(1, Math.min(8, parseInt(document.getElementById("numVariantes").value, 10) || 4));
+
+    var tpl = buildTemplates(tipo, {
+      destino: destino, descuento: descuento, dias: dias,
+      nochesMin: nochesMin, nochesPagas: nochesPagas, nochesTotal: nochesTotal,
+      tema: tema, beneficio: beneficio
+    });
+
+    var paresPool = Array.isArray(tpl.pares) ? tpl.pares : (tpl.pares[perfil] || tpl.pares.mixto);
+
+    var titulos = shuffle(tpl.titulos);
+    var pares = shuffle(paresPool);
+    var condiciones = tpl.condiciones.concat(condicionesExtra);
+
+    var variants = [];
+    for(var i=0;i<numVariantes;i++){
+      var titulo = titulos[i % titulos.length];
+      var par = pares[i % pares.length];
+      variants.push({
+        tipoLabel: TIPO_LABELS[tipo] || "Oferta",
+        perfilLabel: PERFIL_LABELS[perfil] || "",
+        titulo: titulo,
+        hook: par.hook,
+        parrafo: par.parrafo,
+        condiciones: condiciones
+      });
+    }
+    return variants;
+  }
+
+  function renderResults(variants){
+    var maxTitulo = parseInt(document.getElementById("maxTitulo").value, 10) || 40;
+    var maxDescripcion = parseInt(document.getElementById("maxDescripcion").value, 10) || 320;
+    var container = document.getElementById("results");
+    container.innerHTML = "";
+
+    var grid = document.createElement("div");
+    grid.className = "results-grid";
+
+    variants.forEach(function(v, idx){
+      var descText = v.hook + "\n\n" + v.parrafo;
+      var descLen = descText.length;
+      var tituloLen = v.titulo.length;
+
+      var card = document.createElement("div");
+      card.className = "card";
+
+      var condHtml = v.condiciones.map(function(c){return "<li>"+escapeHtml(c)+"</li>";}).join("");
+      var condPlain = v.condiciones.map(function(c){return "• " + c;}).join("\n");
+      var fullText = v.titulo + "\n\n" + descText + "\n\nCondiciones:\n" + condPlain;
+
+      card.innerHTML =
+        '<span class="chip">' + escapeHtml(v.tipoLabel) + (v.perfilLabel ? ' &middot; ' + escapeHtml(v.perfilLabel) : '') + ' &middot; Idea ' + (idx+1) + '</span>' +
+        '<div class="field-block">' +
+          '<div class="field-block-head"><span class="field-label">Título</span>' +
+          '<span class="count-pill ' + countClass(tituloLen, maxTitulo) + '">' + tituloLen + '/' + maxTitulo + '</span></div>' +
+          '<div class="titulo-text">' + escapeHtml(v.titulo) + '</div>' +
+        '</div>' +
+        '<div class="field-block">' +
+          '<div class="field-block-head"><span class="field-label">Descripción</span>' +
+          '<span class="count-pill ' + countClass(descLen, maxDescripcion) + '">' + descLen + '/' + maxDescripcion + '</span></div>' +
+          '<div class="desc-text">' + escapeHtml(descText) + '</div>' +
+        '</div>' +
+        '<div class="field-block">' +
+          '<div class="field-block-head"><span class="field-label">Condiciones</span></div>' +
+          '<ul class="cond-list">' + condHtml + '</ul>' +
+        '</div>' +
+        '<div class="card-actions">' +
+          '<button type="button" class="copy-btn" data-copy="' + encodeURIComponent(fullText) + '">Copiar todo</button>' +
+        '</div>';
+
+      grid.appendChild(card);
+    });
+
+    container.appendChild(grid);
+
+    container.querySelectorAll(".copy-btn").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var text = decodeURIComponent(btn.getAttribute("data-copy"));
+        navigator.clipboard.writeText(text).then(function(){
+          var original = btn.textContent;
+          btn.textContent = "¡Copiado!";
+          btn.classList.add("copied");
+          setTimeout(function(){
+            btn.textContent = original;
+            btn.classList.remove("copied");
+          }, 1500);
+        });
+      });
+    });
+  }
+
+  var lastVariants = null;
+
+  function regenerateAndRender(){
+    lastVariants = buildVariants();
+    renderResults(lastVariants);
+  }
+
+  function updateFieldVisibility(){
+    var tipo = document.getElementById("tipo").value;
+
+    var showDescuento = (tipo !== "personalizado");
+    var showDias = (tipo === "anticipada" || tipo === "ultimo_minuto");
+    var showNochesMin = (tipo === "minima_estadia");
+    var showTema = (tipo === "promo_especial" || tipo === "romance" || tipo === "oferta_general");
+    var showNocheGratis = (tipo === "promo_especial");
+    var showBeneficio = (tipo === "personalizado");
+
+    document.getElementById("field-descuento").style.display = showDescuento ? "" : "none";
+    document.getElementById("field-dias").style.display = showDias ? "" : "none";
+    document.getElementById("field-noches-min").style.display = showNochesMin ? "" : "none";
+    document.getElementById("field-tema").style.display = showTema ? "" : "none";
+    document.getElementById("field-noche-gratis").style.display = showNocheGratis ? "" : "none";
+    document.getElementById("field-beneficio").style.display = showBeneficio ? "" : "none";
+
+    var labelDias = document.getElementById("label-dias");
+    labelDias.textContent = (tipo === "ultimo_minuto") ? "Días de vigencia" : "Días de anticipación";
+
+    var labelTema = document.getElementById("label-tema");
+    var temaInput = document.getElementById("tema");
+    if(tipo === "promo_especial"){
+      labelTema.textContent = "Tema / motivo";
+      temaInput.placeholder = "Ej: Halloween, Mundial, Aniversario del hotel";
+    } else if(tipo === "romance"){
+      labelTema.textContent = "Motivo u ocasión";
+      temaInput.placeholder = "Ej: San Valentín, Aniversario, Luna de miel";
+    } else if(tipo === "oferta_general"){
+      labelTema.textContent = "Nombre de campaña";
+      temaInput.placeholder = "Ej: Oferta de Verano, Cyber Days";
+    }
+  }
+
+  document.getElementById("tipo").addEventListener("change", updateFieldVisibility);
+
+  document.getElementById("offer-form").addEventListener("submit", function(e){
+    e.preventDefault();
+    regenerateAndRender();
+  });
+
+  ["maxTitulo","maxDescripcion"].forEach(function(id){
+    document.getElementById(id).addEventListener("input", function(){
+      if(lastVariants) renderResults(lastVariants);
+    });
+  });
+
+  updateFieldVisibility();
+})();
+</script>
+
+</body>
+</html>
