@@ -283,7 +283,7 @@
 
 <main>
   <section class="panel form-panel">
-    <h2>Datos de la oferta</h2>
+    <h2>Datos de la oferta o plan</h2>
     <form id="offer-form">
       <div class="field">
         <label for="destino">Destino / Hotel</label>
@@ -300,6 +300,16 @@
         <div class="hint">Ajusta el tono del texto: más emocional y experiencial (Leisure), neutral y adaptable (Mixto), o enfocado en ciudad (Urbano).</div>
       </div>
 
+      <div class="field">
+        <label for="modo">¿Qué quieres crear?</label>
+        <select id="modo">
+          <option value="oferta">Oferta</option>
+          <option value="plan">Plan</option>
+        </select>
+        <div class="hint">Una oferta gira en torno a un descuento. Un plan es un paquete de precio fijo con inclusiones concretas (ej: noche de bodas, cena romántica, cumpleaños).</div>
+      </div>
+
+      <div id="oferta-fields">
       <div class="field">
         <label for="tipo">Tipo de oferta</label>
         <select id="tipo">
@@ -349,6 +359,66 @@
       <div class="field" id="field-beneficio">
         <label for="beneficio">Beneficio de la oferta</label>
         <input type="text" id="beneficio" placeholder="Ej: upgrade de habitación gratis">
+      </div>
+      </div>
+
+      <div id="plan-fields" style="display:none">
+        <div class="field">
+          <label for="tipoPlan">Tipo de plan</label>
+          <select id="tipoPlan">
+            <option value="romantico">Romántico</option>
+            <option value="gastronomico">Gastronómico</option>
+            <option value="noche_bodas">Noche de bodas</option>
+            <option value="cumpleanos">Cumpleaños</option>
+            <option value="pasadia">Pasadía</option>
+            <option value="fin_de_semana_plan">Fin de semana</option>
+            <option value="aniversario">Aniversario</option>
+            <option value="bienestar_spa">Bienestar / Spa</option>
+            <option value="familiar">Familiar</option>
+            <option value="concierto_evento">Concierto / Evento</option>
+            <option value="plan_general">Plan general</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="nombrePlan">Nombre del plan (opcional)</label>
+          <input type="text" id="nombrePlan" placeholder="Ej: Plan Medialuna de Miel">
+          <div class="hint">Si lo dejas vacío, se usa un nombre sugerido según el tipo de plan.</div>
+        </div>
+
+        <div class="field row2">
+          <div>
+            <label for="precioPlan">Precio del plan</label>
+            <input type="number" id="precioPlan" min="0" step="1000" placeholder="Ej: 650000">
+          </div>
+          <div>
+            <label for="monedaPlan">Moneda</label>
+            <select id="monedaPlan">
+              <option value="COP $">COP $</option>
+              <option value="USD $">USD $</option>
+              <option value="PEN">PEN</option>
+              <option value="GTQ">GTQ</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="inclusionesPlan">Inclusiones del plan (una por línea)</label>
+          <textarea id="inclusionesPlan" placeholder="Ej:&#10;Habitación Junior Suite&#10;Botella de vino espumoso&#10;Desayuno en la habitación&#10;Late check-out 2 pm"></textarea>
+          <div class="hint">Escribe exactamente lo que incluye este plan en tu hotel. La herramienta no inventa inclusiones.</div>
+        </div>
+
+        <div class="field">
+          <label for="anticipacionPlan">Anticipación de reserva (opcional)</label>
+          <input type="text" id="anticipacionPlan" placeholder="Ej: 24 horas, 2 días">
+        </div>
+
+        <div class="field">
+          <label style="display:flex; align-items:center; gap:8px; font-weight:600; color:var(--text-muted); cursor:pointer;">
+            <input type="checkbox" id="pagoAnticipado" style="width:auto;">
+            El plan se cobra 100% al confirmar la reserva
+          </label>
+        </div>
       </div>
 
       <div class="field">
@@ -411,6 +481,117 @@
     mixto: "Mixto",
     urbano: "Urbano"
   };
+
+  var PLAN_TIPO_LABELS = {
+    romantico: "Romántico",
+    gastronomico: "Gastronómico",
+    noche_bodas: "Noche de bodas",
+    cumpleanos: "Cumpleaños",
+    pasadia: "Pasadía",
+    fin_de_semana_plan: "Fin de semana",
+    aniversario: "Aniversario",
+    bienestar_spa: "Bienestar / Spa",
+    familiar: "Familiar",
+    concierto_evento: "Concierto / Evento",
+    plan_general: "Plan general"
+  };
+
+  function buildPlanTemplates(tipoPlan, p){
+    var destino = p.destino || "tu destino";
+
+    var pools = {
+      romantico: {
+        titulos: ["Plan Romántico", "Plan Romance Deluxe", "Noche Romántica en " + destino, "Escapada Romántica"],
+        hooks: {
+          leisure: ["¡Vive el amor en " + destino + "!", "Una escapada pensada para desconectarse en pareja."],
+          mixto: ["Una pausa romántica, sin importar el motivo de tu viaje.", "El cierre perfecto para un viaje que también puede ser en pareja."],
+          urbano: ["El romance también tiene su lugar en medio de la ciudad.", "Una cita especial en el corazón de " + destino + "."]
+        }
+      },
+      gastronomico: {
+        titulos: ["Plan Gastronómico", "Cena Romántica", "Experiencia Gastronómica"],
+        hooks: {
+          leisure: ["Una experiencia para el paladar en " + destino + ".", "Sabores que se disfrutan mejor sin prisa."],
+          mixto: ["Un buen plan para cerrar el día, sea de trabajo o de descanso.", "La mejor forma de premiar cualquier viaje: con buena mesa."],
+          urbano: ["Lo mejor de la gastronomía de " + destino + ", a un paso de tu habitación.", "Una experiencia culinaria en el corazón de la ciudad."]
+        }
+      },
+      noche_bodas: {
+        titulos: ["Plan Noche de Bodas", "Noche de Bodas Inolvidable", "Plan Luna de Miel"],
+        hooks: {
+          leisure: ["El comienzo perfecto para una nueva etapa.", "Una primera noche para recordar toda la vida."],
+          mixto: ["Una noche especial, sin importar de dónde vengan.", "El inicio de su historia merece un buen comienzo."],
+          urbano: ["Su primera noche como esposos, en el corazón de " + destino + ".", "Una noche de bodas rodeados de lo mejor de la ciudad."]
+        }
+      },
+      cumpleanos: {
+        titulos: ["Plan Cumpleaños", "Celebra tu Cumpleaños en " + destino, "Plan Cumpleaños Especial"],
+        hooks: {
+          leisure: ["Un cumpleaños para recordar en " + destino + ".", "Celebra rodeado de descanso y buenos momentos."],
+          mixto: ["Un motivo más para celebrar, así el viaje haya empezado por trabajo.", "Tu cumpleaños merece una pausa, vengas por lo que vengas."],
+          urbano: ["Celebra tu cumpleaños en el corazón de " + destino + ".", "Tu cumpleaños, con toda la ciudad como escenario."]
+        }
+      },
+      pasadia: {
+        titulos: ["Plan Pasadía", "Pasadía en " + destino, "Un Día de Descanso"],
+        hooks: {
+          leisure: ["Un día completo para desconectarte sin quedarte a dormir.", "Playa, piscina y buena mesa, todo en un solo día."],
+          mixto: ["Un descanso de un día, ideal entre reuniones o como escapada exprés.", "No hace falta una noche completa para desconectarte."],
+          urbano: ["Un respiro de un día en medio de la ciudad.", "Tu pausa de un día sin salir de " + destino + "."]
+        }
+      },
+      fin_de_semana_plan: {
+        titulos: ["Plan Fin de Semana", "Escapada de Fin de Semana", "Plan Escapada"],
+        hooks: {
+          leisure: ["El fin de semana perfecto para desconectarte en " + destino + ".", "Dos días para descansar, comer bien y disfrutar en pareja o familia."],
+          mixto: ["Un fin de semana para descansar, o para adelantar lo pendiente.", "El plan ideal para cerrar la semana, sea cual sea tu motivo de viaje."],
+          urbano: ["Un fin de semana para recorrer " + destino + " sin salir del confort del hotel.", "Dos días para disfrutar de la ciudad a tu ritmo."]
+        }
+      },
+      aniversario: {
+        titulos: ["Plan Aniversario", "Aniversario Inolvidable", "Plan Aniversario Deluxe"],
+        hooks: {
+          leisure: ["Celebren otro año juntos en " + destino + ".", "Un aniversario para recordar, con tiempo para ustedes dos."],
+          mixto: ["Un aniversario que también encuentra su espacio entre semana.", "Celebrar no tiene por qué esperar al fin de semana."],
+          urbano: ["Celebren su aniversario en el corazón de " + destino + ".", "Un aniversario rodeado de lo mejor de la ciudad."]
+        }
+      },
+      bienestar_spa: {
+        titulos: ["Plan Bienestar", "Plan Relax", "Plan Escape"],
+        hooks: {
+          leisure: ["Un espacio para desconectar por completo en " + destino + ".", "Regálate tiempo de descanso y renovación."],
+          mixto: ["Un momento de bienestar, sin importar el motivo de tu viaje.", "El descanso también cabe en una agenda ocupada."],
+          urbano: ["Un momento de calma en medio del ritmo de " + destino + ".", "Bienestar sin salir del corazón de la ciudad."]
+        }
+      },
+      familiar: {
+        titulos: ["Plan Familiar", "Plan en Familia", "Plan Familia"],
+        hooks: {
+          leisure: ["Tiempo de calidad en familia en " + destino + ".", "Momentos para compartir con los más pequeños."],
+          mixto: ["Un plan familiar que se adapta a cualquier tipo de viaje.", "Tiempo en familia, sin importar el motivo de la visita."],
+          urbano: ["Un plan familiar en el corazón de " + destino + ".", "Toda la familia, cerca de lo mejor de la ciudad."]
+        }
+      },
+      concierto_evento: {
+        titulos: ["Plan Concierto", "Plan Evento", "Tu Plan para el Concierto"],
+        hooks: {
+          leisure: ["Vive tu evento favorito y descansa como se debe.", "La mejor forma de disfrutar tu concierto en " + destino + "."],
+          mixto: ["Combina tu evento con una estadía cómoda, sea cual sea tu itinerario.", "Un plan pensado para que solo te concentres en disfrutar."],
+          urbano: ["Tu evento en " + destino + ", sin preocuparte por el resto.", "A un paso del escenario, en el corazón de la ciudad."]
+        }
+      },
+      plan_general: {
+        titulos: ["Plan Especial", "Una Experiencia Diferente", "Plan a tu Medida"],
+        hooks: {
+          leisure: ["Un plan pensado para desconectarte en " + destino + ".", "Una experiencia diferente para disfrutar sin prisa."],
+          mixto: ["Un plan que se adapta a cualquier motivo de viaje.", "Una buena razón más para reservar en " + destino + "."],
+          urbano: ["Una experiencia diferente en el corazón de " + destino + ".", "Un plan pensado para vivir la ciudad de otra manera."]
+        }
+      }
+    };
+
+    return pools[tipoPlan] || pools.plan_general;
+  }
 
   function escapeHtml(str){
     return String(str)
@@ -841,6 +1022,57 @@
     return variants;
   }
 
+  function buildVariantsPlan(){
+    var destino = document.getElementById("destino").value.trim() || "tu destino";
+    var perfil = document.getElementById("perfil").value;
+    var tipoPlan = document.getElementById("tipoPlan").value;
+    var nombrePlan = document.getElementById("nombrePlan").value.trim();
+    var precio = document.getElementById("precioPlan").value;
+    var moneda = document.getElementById("monedaPlan").value;
+    var inclusiones = document.getElementById("inclusionesPlan").value
+      .split("\n").map(function(s){return s.trim();}).filter(Boolean);
+    var anticipacion = document.getElementById("anticipacionPlan").value.trim();
+    var pagoAnticipado = document.getElementById("pagoAnticipado").checked;
+    var condicionesExtra = document.getElementById("condicionesExtra").value
+      .split("\n").map(function(s){return s.trim();}).filter(Boolean);
+    var numVariantes = Math.max(1, Math.min(8, parseInt(document.getElementById("numVariantes").value, 10) || 4));
+
+    var tpl = buildPlanTemplates(tipoPlan, { destino: destino });
+    var titulos = shuffle(nombrePlan ? [nombrePlan, "Plan " + nombrePlan].concat(tpl.titulos) : tpl.titulos);
+    var hooksPool = shuffle(tpl.hooks[perfil] || tpl.hooks.mixto);
+
+    var incluyeBloque = inclusiones.length
+      ? "Incluye:\n" + inclusiones.map(function(i){return "- " + i;}).join("\n")
+      : "Incluye: (agrega las inclusiones reales de este plan)";
+    if(precio){
+      var precioNum = Number(precio);
+      if(!isNaN(precioNum) && precioNum > 0){
+        incluyeBloque += "\n\nValor: " + moneda + " " + precioNum.toLocaleString("es-CO");
+      }
+    }
+
+    var condiciones = [];
+    if(anticipacion) condiciones.push("Reserva con " + anticipacion + " de anticipación.");
+    condiciones.push("Sujeto a disponibilidad.");
+    if(pagoAnticipado) condiciones.push("El plan se cobra 100% al confirmar la reserva.");
+    condiciones = condiciones.concat(condicionesExtra);
+
+    var variants = [];
+    for(var i=0;i<numVariantes;i++){
+      var titulo = titulos[i % titulos.length];
+      var hook = hooksPool[i % hooksPool.length];
+      variants.push({
+        tipoLabel: "Plan " + (PLAN_TIPO_LABELS[tipoPlan] || ""),
+        perfilLabel: PERFIL_LABELS[perfil] || "",
+        titulo: titulo,
+        hook: hook,
+        parrafo: incluyeBloque,
+        condiciones: condiciones
+      });
+    }
+    return variants;
+  }
+
   function renderResults(variants){
     var maxTitulo = parseInt(document.getElementById("maxTitulo").value, 10) || 40;
     var maxDescripcion = parseInt(document.getElementById("maxDescripcion").value, 10) || 320;
@@ -906,11 +1138,16 @@
   var lastVariants = null;
 
   function regenerateAndRender(){
-    lastVariants = buildVariants();
+    var modo = document.getElementById("modo").value;
+    lastVariants = (modo === "plan") ? buildVariantsPlan() : buildVariants();
     renderResults(lastVariants);
   }
 
   function updateFieldVisibility(){
+    var modo = document.getElementById("modo").value;
+    document.getElementById("oferta-fields").style.display = (modo === "oferta") ? "" : "none";
+    document.getElementById("plan-fields").style.display = (modo === "plan") ? "" : "none";
+
     var tipo = document.getElementById("tipo").value;
 
     var showDescuento = (tipo !== "personalizado");
@@ -945,6 +1182,7 @@
   }
 
   document.getElementById("tipo").addEventListener("change", updateFieldVisibility);
+  document.getElementById("modo").addEventListener("change", updateFieldVisibility);
 
   document.getElementById("offer-form").addEventListener("submit", function(e){
     e.preventDefault();
